@@ -1,0 +1,356 @@
+<%
+'//=================================================================
+'//Copyright (c) 2012 BrainLab Inc., All rights reserved.
+'//$Id$
+'//=================================================================
+%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<!-- meta -->
+	<!-- #include virtual file ="../include/meta.inc" -->
+	<title>進捗追加</title>
+	<!-- css -->
+	<!-- #include virtual file ="../include/cssMain.inc" -->
+	<link rel="stylesheet" type="text/css" href="../../common/css/list.css">
+	<link rel="stylesheet" type="text/css" href="../../common/css/order.css">
+	<link rel="stylesheet" type="text/css" href="../css/perClient.css">
+	<link type="text/css" href="../js/css/smoothness/jquery-ui-1.8.22.custom.css" rel="stylesheet" />
+
+	<!-- js -->
+	<!-- #include virtual file ="../include/js.inc" -->
+	<script type="text/javascript" src="../js/core/jquery-ui.js"></script>
+	
+	<script type="text/javascript" src="../include/Js_Validation.js"></script>
+	<script type="text/javascript" src="../include/Js_restrict.js"></script>
+	<script type="text/javascript" src="../include/Js_Common.js"></script>
+	<script type="text/javascript" src="../include/Js_Dialog.js"></script>
+	<script type="text/javascript" src="./5-15.js"></script>
+	<!--20160824 YenHTP.start delete item out of list after create progess-->
+	<script type="text/javascript">
+	<!--
+	if('<%=err_msg%>'==''){
+	}else if('<%=err_msg%>'!='' && '<%=h_unCheckOrder%>' != "" ){
+	    alert('<%=err_msg%>');
+	    var ms;
+	    ms = '<%=h_unCheckOrder%>';	
+	    location.href='../Order/5-15.asp?chk=' + ms;
+	}else{
+		alert('<%=err_msg%>');
+		winclose();
+	}
+	//-->
+	</script>
+	<!--20160824 YenHTP.end delete item out of list after create progess-->
+	<script>
+		<% fieldMetaInfo("5-15") %>
+	</script>
+</head>
+
+<body>
+<div id="container">
+<!-- head -->
+
+
+<!-- ▽main▽ -->
+<div id="main">
+<form name="form1" action="./5-15.asp" method="post" style="text-align:center" onSubmit="return false">
+
+	<input type="hidden" name="h_AddFlg" id="h_AddFlg"     value="<%=h_AddFlg%>">
+	<input type="hidden" name="h_CAREER_ID_L" value="<%=h_CAREER_ID_L%>">
+	<input type="hidden" name="ORDER_ID_T"    value="<%=Chk_ORDER_ID%>">
+	<!--20160824 YenHTP 項目追加 start-->
+    <input type="hidden" name="ck_ORDER_ID_515">
+    <input type="hidden" name="IsJobPosting" value="<%=IsJobPosting%>">
+    <input type="hidden" name="h_DISPORDER">
+    <input type="hidden" name="h_RCM_FLG">
+    <input type="hidden" name="h_unCheckOrder">
+	<h2>進捗追加</h2>
+
+	<table>
+		<tr>
+			<th class="w20">対象求職者</th>
+			<!--<td style="padding:4px 0px 0px 0px">-->
+			<td style="padding:4px">
+				<% FIELD_Name = "CAREER_ID" %>
+				<!--<input type="text" size="20" onChange="ORD515_Button_10()" <%=V_ORD515(FIELD_Name & "_TAG")%> value="<%=Career_ID%>">-->
+				<span class="annotation">IDまたは名前の一部を入力</span><input type="text" name="<%=FIELD_Name%>_T" id="<%=FIELD_Name%>_T" value="<%=V_ORD515(FIELD_Name)%>" size="20"><!--IDまたは名前の一部を入力-->
+				
+				<input type="<%=AuthButton("5-15","ORD515_Button_10")%>" value="検索" id="careerSearch" class="btn_clrGry">
+				<input type="<%=AuthButton("5-15","ORD515_Button_10")%>" value="クリア" onClick="with(document){ form1.CAREER_ID_T.value=''; form1.CAREER_ID_T.focus() }" class="btn_clrGry">
+				<span class="annotation"><div id="<%=FIELD_Name%>_L"><%=V_ORD515(FIELD_Name&"_L")%></div></span>
+				<div style="display:none;">
+					<div id="dialogCareer" align="center"></div>
+				</div>
+			</td>
+		</tr>
+        <tr>
+			<th class="w20">マイページ用 件名 コメント</th>
+			<td style="padding:4px;text-align:left">
+				<span class="annotation"> 件名(20)</span><input type="text" maxlength="20" name="MYPAGEGROUP_NAME_T" id="MYPAGEGROUP_NAME_T" size="20" style="margin:0px 10px 0px 10px;">
+				<span class="annotation"> コメント(50)</span><input type="text" maxlength="50" name="MYPAGEGROUP_COMMENT_T" id="MYPAGEGROUP_COMMENT_T" size="40" style="margin:0px 10px 0px 10px;">
+			</td>
+		</tr>
+	</table>
+	<div id="RedMsg" style=" border:1px #666666 solid; color:#FF0000; background:#FFFFFF; font-size:10pt; margin:5px 0px 0px 0px; padding:10px; display:none">
+		既に進捗が存在する求人が存在します。
+	</div>
+
+	<table class="tbl_zebra">
+		<tbody>
+			<tr>
+                <th class="w10">                    
+                </th>
+				<th class="w45">
+					企業ID－企業名
+				</th>
+
+				<th class="w45">
+					求人ID-ポジション名
+				</th>
+                <th class="w15">
+                    マイページ表示順位
+                </th>
+				<th class="w20" style="text-align:center">
+					進捗
+				</th>
+                <th class="w10" style="text-align:center">
+                    お勧め
+                </th>
+			</tr>
+		</tbody>
+<!--20160824 YenHTP 項目追加 end-->
+<%
+	If Chk_ORDER_ID <> "" Then
+		w_SQLWhere = w_SQLWhere & " Where TOR.ORDER_ID IN (" & Chk_ORDER_ID & ")"
+	End If
+
+	If w_SQLWhere <> "" then
+	
+		Set mRecOrd = Server.CreateObject("ADODB.Recordset")
+
+		'//Unified_Checker
+		T_CAREER_ID = Career_ID
+
+		If T_CAREER_ID <> "" Then
+			   wSQL = "SELECT DISTINCT TOR.ORDER_ID AS ORDER_ID,TOR.CLIENTSUB_ID AS CLIENTSUB_ID,TOR.CLIENT_ID AS CLIENT_ID,TOR.POSITIONNAME AS POSITIONNAME,TC.CLIENTNAME AS CLIENTNAME,TS.PROGRESS_ID AS PROGRESS_ID,Count(TSS.PROGRESS_ID) AS CNT "
+		Else
+			   wSQL = "SELECT DISTINCT TOR.ORDER_ID AS ORDER_ID,TOR.CLIENTSUB_ID AS CLIENTSUB_ID,TOR.CLIENT_ID AS CLIENT_ID,TOR.POSITIONNAME AS POSITIONNAME,TC.CLIENTNAME AS CLIENTNAME,0 AS PROGRESS_ID,0 AS CNT "
+		End If
+		wSQL = wSQL & " FROM TRNORDER TOR LEFT JOIN TRNCLIENT TC ON TOR.CLIENT_ID = TC.CLIENT_ID "
+		wSQL = wSQL & " LEFT JOIN TRNSHINTYOKU TS ON TS.ORDER_ID = TOR.ORDER_ID "
+		If T_CAREER_ID <> "" Then
+			wSQL = wSQL & " And TS.CAREER_ID = " & T_CAREER_ID & " "
+		End If
+		wSQL = wSQL & " LEFT JOIN TRNSHINTYOKUSUB TSS ON TS.PROGRESS_ID = TSS.PROGRESS_ID "
+		wSQL = wSQL & w_SQLWhere
+		wSQL = wSQL & " Group by TOR.ORDER_ID,TOR.CLIENTSUB_ID,TOR.CLIENT_ID,TOR.POSITIONNAME,TC.CLIENTNAME,TS.PROGRESS_ID Order by TOR.ORDER_ID ASC "
+		'// Response.Write wSQL & "<HR>"
+'// 2009/06/16 ukaji プログラム毎のDBオープン、クローズ対応
+'		mRecOrd.open wSQL, Session("db"),0,1
+		mRecOrd.open wSQL, Cn,0,1
+		Do Until mRecOrd.EOF
+%>
+		<tbody>
+		<tr>
+<!--20160824 YenHTP SetValue to 一覧 table Begin-->		
+<%          If mRecOrd("CNT") <> "0" Then %>                                                          <!--'check exist career id--> 
+                    <!--進捗有-->
+                <script type="text/javascript">
+				<!--
+				document.getElementById("RedMsg").style.display = "block";
+				//-->
+                </script>
+<%
+                Dim  mRecStatus
+                Dim  wSQLStatus
+   				Dim LinkImg 
+                Set mRecStatus = Server.CreateObject("ADODB.Recordset")
+                wSQLStatus = "SELECT STATUS_ID FROM TRNSHINTYOKU WHERE ORDER_ID = " & mRecOrd("ORDER_ID") & " AND CAREER_ID = " & T_CAREER_ID
+                mRecStatus.open wSQLStatus, Cn,0,1
+                If mRecStatus.EOF = false Then                                                         'check exist progress with career id
+                    Dim STATUS_ID
+                    STATUS_ID = mRecStatus("STATUS_ID")
+                    LinkImg = "../../common/images/order515.png"
+ %>  
+                    <td style="text-align:left; padding-left:20px;"><!--field 1-->
+                        <input type="checkbox" name="chkOrder" value="<%=mRecOrd("ORDER_ID")%>">
+                        <img src="<%=LinkImg%>" alt="">
+                    </td>    
+                    <td style="text-align:left"><!--field 2-->
+                        <p class="nameS_client">
+                            <%=mRecOrd("CLIENT_ID")%>&nbsp-&nbsp
+                            <a href="javascript:top.open_client(<%=mRecOrd("CLIENT_ID")%>,<%=mRecOrd("CLIENTSUB_ID")%>)">
+                                <%=mRecOrd("CLIENTNAME") %>
+                            </a>
+                        </p>
+                    </td>
+                    <td style="text-align:left"><!--field 3-->
+                        <p class="nameS_order">
+                            <%=mRecOrd("ORDER_ID")%>&nbsp-&nbsp
+                            <a href="javascript:ORD515_Button_20(<%=mRecOrd("ORDER_ID")%>)">
+                                <%=mRecOrd("POSITIONNAME") %>
+                            </a>
+                        </p>
+                    </td>
+                    <td>
+                        <!--field 4-->
+                        <input type="checkbox" name="chkDISPORDER">
+                    </td>
+                    <td> <!--field 5-->         
+                        <a href="javascript:open_detail(<%=mRecOrd("PROGRESS_ID") %>)">
+                            <%=V_ORD_STATUS_515(STATUS_ID)%>
+                        </a>
+                    </td>                   
+<% 
+                    mRecStatus.close
+                    set mRecStatus = nothing 
+                 End If        
+           ElseIf  T_CAREER_ID <> 0 then                                                                                        
+                Set mRecStatus = Server.CreateObject("ADODB.Recordset")
+                wSQLStatus = "SELECT COUNT(PROGRESS_ID) AS NUMPROG FROM TRNSHINTYOKU TS JOIN TRNORDER TO1 ON TS.ORDER_ID = TO1.ORDER_ID  WHERE CLIENT_ID = " & mRecOrd("CLIENT_ID") & " AND TS.CAREER_ID = " & T_CAREER_ID
+                mRecStatus.open wSQLStatus, Cn,0,1
+                LinkImg = "../../common/images/client515.png"
+                If mRecStatus("NUMPROG") <> "0" then                            
+%>   
+                        <td style="text-align:left; padding-left:20px;">
+                            <!--field 1-->
+                            <input type="checkbox" name="chkOrder" value="<%=mRecOrd("ORDER_ID")%>">
+                            <img src="<%=LinkImg%>" alt="">
+                        </td>
+                        <td style="text-align:left">
+                            <!--field 2-->
+                            <p class="nameS_client">
+                                <%=mRecOrd("CLIENT_ID")%>&nbsp-&nbsp
+                                <a href="javascript:top.open_client(<%=mRecOrd("CLIENT_ID")%>
+                                    ,<%=mRecOrd("CLIENTSUB_ID")%>)">
+                                    <%=mRecOrd("CLIENTNAME") %>
+                                </a>
+                            </p>
+                        </td>
+                        <td style="text-align:left">
+                            <!--field 3-->
+                            <p class="nameS_order">
+                                <%=mRecOrd("ORDER_ID")%>&nbsp-&nbsp
+                                <a href="javascript:ORD515_Button_20(<%=mRecOrd("ORDER_ID")%>
+                                    )">
+                                    <%=mRecOrd("POSITIONNAME") %>
+                                </a>
+                            </p>
+                        </td>
+                        <td>
+                            <!--field 4-->
+                            <input type="checkbox" name="chkDISPORDER">
+                        </td>
+                        <td>
+                            <!--field 5-->
+                            <a href="javascript:open_702(<%=mRecOrd("CLIENT_ID")%>,<%=T_CAREER_ID%>)">
+                                進捗あり
+                            </a>
+                        </td>                  
+                <% Else %>                                                               
+                        <td style="text-align:left;padding-left:20px;"><!--field 1-->
+                            <input type="checkbox" name="chkOrder" value="<%=mRecOrd("ORDER_ID")%>">                       
+                        </td>
+                        <td style="text-align:left"><!--field 2-->
+                            <p class="nameS_client">
+                                <%=mRecOrd("CLIENT_ID")%>&nbsp-&nbsp
+                                <a href="javascript:top.open_client(<%=mRecOrd("CLIENT_ID")%>
+                                    ,<%=mRecOrd("CLIENTSUB_ID")%>)">
+                                    <%=mRecOrd("CLIENTNAME") %>
+                                </a>
+                            </p>
+                        </td>
+                        <td style="text-align:left"><!--field 3-->
+                            <p class="nameS_order">
+                                <%=mRecOrd("ORDER_ID")%>&nbsp-&nbsp
+                                <a href="javascript:ORD515_Button_20(<%=mRecOrd("ORDER_ID")%>
+                                    )">
+                                    <%=mRecOrd("POSITIONNAME") %>
+                                </a>
+                            </p>
+                        </td>    
+                        <td><!--field 4-->
+                            <input type="checkbox" name="chkDISPORDER">
+                        </td>               
+                        <td><!--field 5-->
+                            <a href="#">                           
+                            </a>
+                        </td>                    
+				<% End If %>			 
+           <% Else %>
+                <td style="text-align:left;padding-left:20px;">
+                    <!--field 1-->
+                    <input type="checkbox" name="chkOrder" value="<%=mRecOrd("ORDER_ID")%>">
+                </td>
+                <td style="text-align:left">
+                    <!--field 2-->
+                    <p class="nameS_client">
+                        <%=mRecOrd("CLIENT_ID")%>&nbsp-&nbsp
+                        <a href="javascript:top.open_client(<%=mRecOrd("CLIENT_ID")%>
+                            ,<%=mRecOrd("CLIENTSUB_ID")%>)">
+                            <%=mRecOrd("CLIENTNAME") %>
+                        </a>
+                    </p>
+                </td>
+                <td style="text-align:left">
+                    <!--field 3-->
+                    <p class="nameS_order">
+                        <%=mRecOrd("ORDER_ID")%>&nbsp-&nbsp
+                        <a href="javascript:ORD515_Button_20(<%=mRecOrd("ORDER_ID")%>
+                            )">
+                            <%=mRecOrd("POSITIONNAME") %>
+                        </a>
+                    </p>
+                </td>
+                <td>
+                    <!--field 4-->
+                    <input type="checkbox" name="chkDISPORDER">
+                </td>
+                <td>
+                    <!--field 5-->
+                    <a href="#">
+                    </a>
+                </td> 
+            <% End If %>
+                <td>
+                    <!--field 6-->
+                    <input type="checkbox" name="chkRCM_FLG">
+ <!--20160824 YenHTP SetValue to 一覧 table End-->
+                </td> 	
+		</tr>
+		</tbody>
+<%
+		mRecOrd.MoveNext
+		Loop
+	End If
+%>
+	</table>
+
+	<div style="font-size:10pt; padding:25px 0px 0px 0px; text-align:center">
+		<% If T_CAREER_ID <> "" Then %>
+		一括で進捗追加致します。宜しければ［追加］ボタンを押してください。　<BR><BR>
+		<span style="color:red;font-weight:bold;"> ※ 既存の進捗は削除されます。</span>
+		<!--YenHTP.Begin-->
+             <% 'Else %> 
+		     <!--対象求職者を指定してください-->
+        <!--YenHTP.End-->
+		<% End If %>
+	</div>
+
+	<div style="font-size:10pt; padding:25px 0px 25px 0px; text-align:center">
+<!--20160824 YenHTP 項目追加 Begin-->
+	<!--<input type="button" value="追加(S)" accesskey="s" onclick="fmSubmit()" class="btn_clrGry">
+	<input type="button" value="中止(Q)" accesskey="q" onclick="window.close()" class="btn_clrGry">-->
+		<input type="button" value="進捗作成（または上書き）" accesskey="s" onclick="fmSubmit();" class="btn_clrBl">
+   <% If IsJobPosting = "True" Then %>
+		<input type="button" value="送信のみ（進捗変更なし）" accesskey="q" onclick="fmJobPosting()" class="btn_clrGrn">
+   <% End If %>
+<!--20160824 YenHTP 項目追加 end-->
+	</div>
+
+</form>
+</div><!-- △main△ -->
+</div><!-- /container -->
+</body>
+</html>
